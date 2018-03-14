@@ -6,6 +6,7 @@ var force, node, data, maxVal;
 var brake = 0.2;
 var radius = d3.scale.sqrt().range([10, 20]);
 
+
 var partyCentres = { 
     con: { x: w / 3, y: h / 3.3}, 
     lab: {x: w / 3, y: h / 2.3}, 
@@ -21,7 +22,7 @@ var entityCentres = {
 		individual: {x: w / 3.65, y: h / 3.3},
 	};
 
-var fill = d3.scale.ordinal().range(["#df22f0", "#087FBD", "#FDBB30"]);
+var fill = d3.scale.ordinal().range(["#cc00ff", "#00e600", "#ff8533"]);
 
 var svgCentre = { 
     x: w / 3.6, y: h / 2
@@ -40,6 +41,9 @@ var tooltip = d3.select("#chart")
 	.attr("id", "tooltip");
 
 var comma = d3.format(",.0f");
+//SoundButton
+var soundbutton = new Audio();
+    soundbutton.src = 'soundbutton.mp3';
 
 function transition(name) {
 	if (name === "all-donations") {
@@ -75,6 +79,7 @@ function transition(name) {
 		$("#view-source-type").fadeIn(1000);
 		return fundsType();
 	}
+   
 
 function start() {
 
@@ -92,7 +97,8 @@ function start() {
 		.attr("r", 0)
 		.style("fill", function(d) { return fill(d.party); })
 		.on("mouseover", mouseover)
-		.on("mouseout", mouseout);
+		.on("mouseout", mouseout)
+        .on("click",google);
 		// Alternative title based 'tooltips'
 		// node.append("title")
 		//	.text(function(d) { return d.donor; });
@@ -133,7 +139,13 @@ function donorType() {
 		.on("tick", entities)
 		.start();
 }
-
+function amount(){
+    force.gravity(0)
+        .friction(0.75)
+        .charge(function(d) { return -Math.pow(d.radius, 2.0) / 3; })
+        .on("tick", aof)
+        .start();
+}
 function fundsType() {
 	force.gravity(0)
 		.friction(0.75)
@@ -171,7 +183,12 @@ function all(e) {
 		node.attr("cx", function(d) { return d.x; })
 			.attr("cy", function(d) {return d.y; });
 }
+function aof(e){
+    node.each(moveToaof(e.alpha))
 
+		node.attr("cx", function(d) { return d.x; })
+			.attr("cy", function(d) {return d.y; });
+}
 
 function moveToCentre(alpha) {
 	return function(d) {
@@ -224,7 +241,19 @@ function moveToEnts(alpha) {
 		d.y += (centreY - d.y) * (brake + 0.02) * alpha * 1.1;
 	};
 }
+function moveToaof(alpha) {
+	return function(d) {
+		var centreX = svgCentre.x + 75;
+        if (d.value <= 27000) {
+        centreY = svgCentre.y + 75;
+        }else{
+        centreY = svgCentre.y - 75;
+        }
 
+		d.x += (centreX - d.x) * (brake + 0.02) * alpha * 1.1;
+		d.y += (centreY - d.y) * (brake + 0.02) * alpha * 1.1;
+	};
+}
 function moveToFunds(alpha) {
 	return function(d) {
 		var centreY = entityCentres[d.entity].y;
@@ -315,6 +344,9 @@ function mouseover(d, i) {
 	var party = d.partyLabel;
 	var entity = d.entityLabel;
 	var offset = $("svg").offset();
+    responsiveVoice.cancel();
+    responsiveVoice.speak(donor);
+    responsiveVoice.speak(amount + 'british pounds');
 	
 
 
@@ -349,6 +381,7 @@ function mouseover(d, i) {
 	}
 
 function mouseout() {
+    responsiveVoice.cancel();
 	// no more tooltips
 		var mosie = d3.select(this);
 
@@ -357,6 +390,13 @@ function mouseout() {
 		d3.select(".tooltip")
 			.style("display", "none");
 		}
+//Dhmiourgia ths google  gia thn anazhthsh twn donor
+function google(d, i){
+    var mosie = d3.select(this);
+    var donor = d.donor;
+    var url ='http://www.google.com/search?q=' + donor;
+    window.open(url,'_blank');
+}
 
 $(document).ready(function() {
 		d3.selectAll(".switch").on("click", function(d) {
